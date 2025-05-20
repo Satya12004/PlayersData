@@ -1,4 +1,6 @@
-const Players=require('../Models/Players')
+const { MongoServerClosedError } = require('mongodb');
+const Players=require('../Models/Players');
+const { default: mongoose } = require('mongoose');
 
 const CreatePlayer =async(req,res)=>{
     const {name, team, country, runs, image, role, salary}=req.body;
@@ -8,16 +10,23 @@ const CreatePlayer =async(req,res)=>{
        })
        res.status(200).json({msg:'Palyers data created succesfully'})
     } catch (error) {
-       res.status(400).json({error:'error in creating player data'}) 
+       res.status(400).json({msg:'error in creating player data',error:error.message}) 
     }
 }
 
 const getPlayer =async(req,res)=>{
     const id=req.params.id;
-    console.log(id)
+   if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ msg: 'Invalid player ID format' });
+    }
     try {
         const Playerdata= await Players.findById(id)
-       res.status(200).json({msg:'Palyers data find succesfully',Playerdata})
+        if(Playerdata){
+         res.status(200).json({msg:'Palyers data find succesfully',Playerdata})
+        }else {
+            res.status(404).json({msg:'Player not found'}) 
+        }
+       
     } catch (error) {
        res.status(400).json({msg:'error in getting player data',error:error.message}) 
     }
